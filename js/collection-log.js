@@ -1,0 +1,2 @@
+function discover(id){Game.state.collection[id]=(Game.state.collection[id]||0)+1;Game.uiDirty=true}
+function categories(){return{Logs:Object.keys(ITEM).filter(i=>ITEM[i].type==='log'),Ores:Object.keys(ITEM).filter(i=>ITEM[i].type==='ore'),Fish:Object.keys(ITEM).filter(i=>ITEM[i].type==='fish'),Enemies:ENEMIES.map(e=>e.id),Tools:Object.keys(ITEM).filter(i=>ITEM[i].type==='tool'),Equipment:Object.keys(ITEM).filter(i=>ITEM[i].type==='equipment'),Pets:Object.keys(ITEM).filter(i=>ITEM[i].type==='pet'),'Rare items':Object.keys(ITEM).filter(i=>ITEM[i].type==='rare')}}
