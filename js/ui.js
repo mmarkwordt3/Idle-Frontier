@@ -9,6 +9,7 @@ function modal(title, body) {
 }
 
 function closeModal() {
+  if (typeof Game !== 'undefined') Game.shopMessage = null;
   $('modal').classList.add('hidden');
 }
 
