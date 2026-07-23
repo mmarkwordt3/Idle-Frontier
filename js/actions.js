@@ -52,6 +52,29 @@ function startGather(object) {
   logMsg(`Started gathering ${resource.name}.`);
 }
 
+const SKILL_PET_EXPECTED_LEVEL = 92;
+const SKILL_PETS = { woodcutting: 'forest_sprite', mining: 'ore_mite', fishing: 'tide_pup' };
+
+function skillPetChance(resourceXp) {
+  const expectedXp = xpForLevel(SKILL_PET_EXPECTED_LEVEL);
+  return 1 - Math.exp(-resourceXp / expectedXp);
+}
+
+function awardPet(id) {
+  if (Game.state.pets.owned[id]) Game.state.pets.dupes[id] = (Game.state.pets.dupes[id] || 0) + 1;
+  else Game.state.pets.owned[id] = true;
+  Game.state.pets.active = id;
+  discover(id);
+  logMsg(`Pet found: ${itemDef(id).name}!`, 'rare');
+  sound('rare');
+}
+
+function rollSkillPet(resource) {
+  const petId = SKILL_PETS[resource.skill];
+  if (!petId) return;
+  if (Math.random() < skillPetChance(resource.xp)) awardPet(petId);
+}
+
 function updateAction(now) {
   const action = Game.state.action;
   if (action.type !== 'gathering') return;
@@ -84,6 +107,7 @@ function updateAction(now) {
       Game.state.counts.gathered += quantity;
       logMsg(`Received ${quantity} ${resource.name} (+${resource.xp} xp).`);
       rollRare(resource.rare);
+      rollSkillPet(resource);
       sound('gather');
     }
 
@@ -101,14 +125,12 @@ function updateAction(now) {
 function rollRare(table) {
   for (const drop of table || []) {
     if (drop.rate && Math.random() < drop.rate) {
-      if (itemDef(drop.id).type === 'pet') {
-        if (Game.state.pets.owned[drop.id]) Game.state.pets.dupes[drop.id] = (Game.state.pets.dupes[drop.id] || 0) + 1;
-        else Game.state.pets.owned[drop.id] = true;
-        Game.state.pets.active = drop.id;
-        logMsg(`Pet found: ${itemDef(drop.id).name}!`, 'rare');
-      } else addItem(drop.id, 1);
-      discover(drop.id);
-      sound('rare');
+      if (itemDef(drop.id).type === 'pet') awardPet(drop.id);
+      else {
+        addItem(drop.id, 1);
+        discover(drop.id);
+        sound('rare');
+      }
     }
   }
 }

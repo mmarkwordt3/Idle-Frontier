@@ -138,7 +138,8 @@ function openCollection() {
     html += `<h3>${category}</h3>` + collection[category].map((id) => {
       const seen = Game.state.collection[id] || Game.state.pets.owned[id] || Game.state.kills[id];
       const name = ITEM[id] ? itemDef(id).name : (enemyDef(id)?.name || id);
-      return `<div class="entry">${seen ? `✓ ${name}` : '???'} x${Game.state.collection[id] || Game.state.pets.dupes[id] || Game.state.kills[id] || 0}</div>`;
+      const petInfo = ITEM[id]?.type === 'pet' && typeof PET_INFO !== 'undefined' ? `<div class="hint">${PET_INFO[id].join('<br>')}</div>` : '';
+      return `<div class="entry">${seen ? `✓ ${name}` : '???'} x${Game.state.collection[id] || Game.state.pets.dupes[id] || Game.state.kills[id] || 0}${petInfo}</div>`;
     }).join('');
   }
   modal('Collection Log', html);
