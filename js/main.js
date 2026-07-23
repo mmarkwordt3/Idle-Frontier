@@ -56,14 +56,20 @@ function loop(now) {
     }
     updateAchievements();
     draw();
-    renderUI();
+    renderLiveUI();
+    if (Game.uiDirty) {
+      renderStateUI();
+    }
   } catch (error) {
     console.error('Idle Frontier main loop error:', error);
     if (!loopErrorReported) {
       loopErrorReported = true;
       try {
         logMsg('A game loop error occurred. Check the browser console for details.', 'bad');
-        renderUI();
+        renderLiveUI();
+        if (Game.uiDirty) {
+          renderStateUI();
+        }
       } catch (logError) {
         console.error('Unable to report loop error in game log:', logError);
       }
