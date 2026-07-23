@@ -1,1 +1,54 @@
-function setupInput(){let c=$('game');c.addEventListener('click',ev=>{audioUnlock();let r=c.getBoundingClientRect(),T=CONFIG.TILE,cols=Math.ceil(c.width/T),rows=Math.ceil(c.height/T),p=Game.state.player,sx=Math.max(0,Math.min(100-cols,Math.floor(p.px-cols/2))),sy=Math.max(0,Math.min(100-rows,Math.floor(p.py-rows/2))),x=Math.floor((ev.clientX-r.left)/r.width*c.width/T)+sx,y=Math.floor((ev.clientY-r.top)/r.height*c.height/T)+sy;let en=Game.enemies.find(e=>e.x===x&&e.y===y&&e.hp>0);if(en)return clickEnemy(en);let ob=Game.objects.find(o=>o.x===x&&o.y===y&&o.active!==false);if(ob)return clickObject(ob);if(blocked(x,y))return logMsg('That tile is blocked.','bad');moveTo(x,y)});$('closeModal').onclick=closeModal;$('bankBtn').onclick=openBank;$('shopBtn').onclick=openShop;$('tasksBtn').onclick=openTasks;$('achBtn').onclick=openAch;$('logBtn').onclick=openCollection;$('settingsBtn').onclick=openSettings;$('saveBtn').onclick=saveGame}
+function setupInput() {
+  const canvas = $('game');
+  if (!canvas) {
+    console.error('Game canvas not found; input disabled.');
+    return;
+  }
+
+  canvas.addEventListener('click', (event) => {
+    try {
+      audioUnlock();
+    } catch (error) {
+      console.warn('Audio could not be initialized; movement will continue without sound.', error);
+      logMsg('Audio unavailable; continuing without sound.');
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const tileSize = CONFIG.TILE;
+    const cols = Math.ceil(canvas.width / tileSize);
+    const rows = Math.ceil(canvas.height / tileSize);
+    const player = Game.state.player;
+    const startX = Math.max(0, Math.min(CONFIG.W - cols, Math.floor(player.px - cols / 2)));
+    const startY = Math.max(0, Math.min(CONFIG.H - rows, Math.floor(player.py - rows / 2)));
+    const x = Math.floor((event.clientX - rect.left) / rect.width * canvas.width / tileSize) + startX;
+    const y = Math.floor((event.clientY - rect.top) / rect.height * canvas.height / tileSize) + startY;
+
+    const enemy = Game.enemies.find((candidate) => candidate.x === x && candidate.y === y && candidate.hp > 0);
+    if (enemy) {
+      clickEnemy(enemy);
+      return;
+    }
+
+    const object = Game.objects.find((candidate) => candidate.x === x && candidate.y === y && candidate.active !== false);
+    if (object) {
+      clickObject(object);
+      return;
+    }
+
+    if (blocked(x, y)) {
+      logMsg('That tile is blocked.', 'bad');
+      return;
+    }
+
+    moveTo(x, y);
+  });
+
+  $('closeModal').onclick = closeModal;
+  $('bankBtn').onclick = openBank;
+  $('shopBtn').onclick = openShop;
+  $('tasksBtn').onclick = openTasks;
+  $('achBtn').onclick = openAch;
+  $('logBtn').onclick = openCollection;
+  $('settingsBtn').onclick = openSettings;
+  $('saveBtn').onclick = saveGame;
+}
