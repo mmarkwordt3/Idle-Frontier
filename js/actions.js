@@ -1,6 +1,133 @@
-function clickObject(o){if(Game.state.action.target===o.id)return;let adj=adjacentTarget(o);if(!adj)return logMsg(`${o.name||o.kind} is unreachable.`,'bad');moveTo(adj.x,adj.y,()=>interact(o))}
-function interact(o){if(o.kind==='building'){if(o.id==='bank')openBank();else if(o.id==='shop')openShop();else if(o.id==='fountain'){Game.state.player.hp=maxHp();logMsg('The fountain restores you.')}else if(o.id==='tasks')openTasks();else openShop('fame');return}if(o.kind==='resource')startGather(o)}
-function startGather(o){let d=resDef(o.defId),sk=Game.state.skills[d.skill];if(sk.level<d.level)return logMsg(`Need ${d.skill} level ${d.level}.`,'bad');setAction({type:'gathering',target:o.id,last:performance.now(),progress:0});logMsg(`Started gathering ${d.name}.`)}
-function updateAction(now){let a=Game.state.action;if(a.type!=='gathering')return;let o=Game.objects.find(x=>x.id===a.target),d=o&&resDef(o.defId);if(!o||!o.active){setAction({type:'idle'});return}let tool=itemDef(Game.state.equipment[d.skill]),mult=1-(tool.tier-1)*.11,interval=d.interval*mult,loops=Math.min(30,Math.floor((now-a.last)/interval));a.progress=((now-a.last)%interval)/interval*100;if(loops<=0)return;for(let i=0;i<loops;i++){if(!hasSpaceFor(d.item)){logMsg('Inventory full; gathering stopped.','bad');setAction({type:'idle'});return}a.last+=interval;let success=Math.random()<(.78+tool.tier*.035);if(success){let qty=Math.random()<tool.tier*.03?2:1;addItem(d.item,qty);gainXp(d.skill,d.xp);Game.state.counts.gathered+=qty;logMsg(`Received ${qty} ${d.name} (+${d.xp} xp).`);rollRare(d.rare);sound('gather')}if(Math.random()<d.deplete){o.active=false;o.respawnAt=Date.now()+d.respawn;Game.state.resources[o.id]=o.respawnAt;logMsg(`${d.name} depleted.`);setAction({type:'idle'});return}}}
-function rollRare(table){for(const r of table||[])if(r.rate&&Math.random()<r.rate){if(itemDef(r.id).type==='pet'){if(Game.state.pets.owned[r.id])Game.state.pets.dupes[r.id]=(Game.state.pets.dupes[r.id]||0)+1;else Game.state.pets.owned[r.id]=true;Game.state.pets.active=r.id;logMsg(`Pet found: ${itemDef(r.id).name}!`,'rare')}else addItem(r.id,1);discover(r.id);sound('rare')}}
-function updateRespawns(){let now=Date.now();Game.objects.forEach(o=>{if(o.respawnAt&&now>=o.respawnAt){o.active=true;o.respawnAt=0;delete Game.state.resources[o.id]}});Game.enemies.forEach(e=>{let d=enemyDef(e.defId);if(e.hp<=0&&e.respawnAt&&now>=e.respawnAt){e.hp=d.hp;e.respawnAt=0;delete Game.state.enemies[e.uid]}})}
+function actionSkillName(skill) {
+  return skill.charAt(0).toUpperCase() + skill.slice(1);
+}
+
+function clickObject(object) {
+  if (!object) return;
+  if (Game.state.action.target === object.id) return;
+
+  if (object.kind === 'resource') {
+    const resource = resDef(object.defId);
+    const level = Game.state.skills[resource.skill].level;
+    if (level < resource.level) {
+      logMsg(`Requires ${actionSkillName(resource.skill)} level ${resource.level} to gather ${resource.name}.`, 'bad');
+      return;
+    }
+    logMsg(`Walking to ${resource.name}.`);
+  } else {
+    logMsg(`Walking to ${object.name || object.kind}.`);
+  }
+
+  const adjacent = adjacentTarget(object);
+  if (!adjacent) {
+    logMsg(`${object.name || object.kind} is unreachable.`, 'bad');
+    return;
+  }
+
+  moveTo(adjacent.x, adjacent.y, () => interact(object));
+}
+
+function interact(object) {
+  if (object.kind === 'building') {
+    if (object.id === 'bank') openBank();
+    else if (object.id === 'shop') openShop();
+    else if (object.id === 'fountain') {
+      Game.state.player.hp = maxHp();
+      logMsg('The fountain restores you.');
+    } else if (object.id === 'tasks') openTasks();
+    else openShop('fame');
+    return;
+  }
+  if (object.kind === 'resource') startGather(object);
+}
+
+function startGather(object) {
+  const resource = resDef(object.defId);
+  const skill = Game.state.skills[resource.skill];
+  if (skill.level < resource.level) {
+    logMsg(`Requires ${actionSkillName(resource.skill)} level ${resource.level} to gather ${resource.name}.`, 'bad');
+    return;
+  }
+  setAction({ type: 'gathering', target: object.id, last: performance.now(), progress: 0 });
+  logMsg(`Started gathering ${resource.name}.`);
+}
+
+function updateAction(now) {
+  const action = Game.state.action;
+  if (action.type !== 'gathering') return;
+  const object = Game.objects.find((candidate) => candidate.id === action.target);
+  const resource = object && resDef(object.defId);
+  if (!object || !object.active) {
+    setAction({ type: 'idle' });
+    return;
+  }
+
+  const tool = itemDef(Game.state.equipment[resource.skill]);
+  const interval = resource.interval * (1 - (tool.tier - 1) * 0.11);
+  const loops = Math.min(30, Math.floor((now - action.last) / interval));
+  action.progress = ((now - action.last) % interval) / interval * 100;
+  if (loops <= 0) return;
+
+  for (let i = 0; i < loops; i += 1) {
+    if (!hasSpaceFor(resource.item)) {
+      logMsg('Inventory full; gathering stopped.', 'bad');
+      setAction({ type: 'idle' });
+      return;
+    }
+
+    action.last += interval;
+    const success = Math.random() < (0.78 + tool.tier * 0.035);
+    if (success) {
+      const quantity = Math.random() < tool.tier * 0.03 ? 2 : 1;
+      addItem(resource.item, quantity);
+      gainXp(resource.skill, resource.xp);
+      Game.state.counts.gathered += quantity;
+      logMsg(`Received ${quantity} ${resource.name} (+${resource.xp} xp).`);
+      rollRare(resource.rare);
+      sound('gather');
+    }
+
+    if (Math.random() < resource.deplete) {
+      object.active = false;
+      object.respawnAt = Date.now() + resource.respawn;
+      Game.state.resources[object.id] = object.respawnAt;
+      logMsg(`${resource.name} depleted.`);
+      setAction({ type: 'idle' });
+      return;
+    }
+  }
+}
+
+function rollRare(table) {
+  for (const drop of table || []) {
+    if (drop.rate && Math.random() < drop.rate) {
+      if (itemDef(drop.id).type === 'pet') {
+        if (Game.state.pets.owned[drop.id]) Game.state.pets.dupes[drop.id] = (Game.state.pets.dupes[drop.id] || 0) + 1;
+        else Game.state.pets.owned[drop.id] = true;
+        Game.state.pets.active = drop.id;
+        logMsg(`Pet found: ${itemDef(drop.id).name}!`, 'rare');
+      } else addItem(drop.id, 1);
+      discover(drop.id);
+      sound('rare');
+    }
+  }
+}
+
+function updateRespawns() {
+  const now = Date.now();
+  Game.objects.forEach((object) => {
+    if (object.respawnAt && now >= object.respawnAt) {
+      object.active = true;
+      object.respawnAt = 0;
+      delete Game.state.resources[object.id];
+    }
+  });
+  Game.enemies.forEach((enemy) => {
+    const definition = enemyDef(enemy.defId);
+    if (enemy.hp <= 0 && enemy.respawnAt && now >= enemy.respawnAt) {
+      enemy.hp = definition.hp;
+      enemy.respawnAt = 0;
+      delete Game.state.enemies[enemy.uid];
+    }
+  });
+}
