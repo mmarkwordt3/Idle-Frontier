@@ -119,14 +119,14 @@ function spawnObjects() {
     }
   }
 
-  ['bank', 'shop', 'fountain', 'tasks', 'fame'].forEach((kind, i) => {
+  ['bank', 'shop', 'fountain', 'tasks', 'fame', 'forge'].forEach((kind, i) => {
     const x = 44 + i * 3;
     const y = 48;
     occupied.add(key(x, y));
     objects.push({
       id: kind,
       kind: 'building',
-      name: { bank: 'Bank', shop: 'Merchant Hall', fountain: 'Healing Fountain', tasks: 'Task Board', fame: 'Fame Monument' }[kind],
+      name: { bank: 'Bank', shop: 'Merchant Hall', fountain: 'Healing Fountain', tasks: 'Task Board', fame: 'Fame Monument', forge: 'Frontier Forge' }[kind],
       x,
       y,
       active: true,

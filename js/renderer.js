@@ -161,6 +161,7 @@ function drawWoodcuttingResource(ctx, resource, x, y) {
 }
 
 function drawBuilding(ctx, object, x, y) {
+  if(object.id==='forge'){ctx.fillStyle='#3b3f46';ctx.fillRect(x+4,y+8,24,18);ctx.fillStyle='#ff7a3d';ctx.fillRect(x+11,y+3,10,8);ctx.fillStyle='#111';ctx.fillText('F',x+12,y+22);return;}
   ctx.fillStyle = '#d9c06b';
   ctx.fillRect(x + 5, y + 5, 22, 22);
   ctx.fillStyle = '#111';

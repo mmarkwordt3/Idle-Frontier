@@ -66,12 +66,13 @@ for (const resources of Object.values(context.RESOURCES)) {
   }
 }
 
-const caveRat = context.ENEMIES.find((enemy) => enemy.id === 'cave_rat');
+const ruinGuard = context.ENEMIES.find((enemy) => enemy.id === 'ruin_guard');
+const stoneBeast = context.ENEMIES.find((enemy) => enemy.id === 'stone_beast');
 const ancientWarden = context.ENEMIES.find((enemy) => enemy.id === 'ancient_warden');
-assert.strictEqual(caveRat.drops.find((drop) => drop.id === 'rubble_imp').rate, 0.0025, 'Rubble Imp should be 0.0025');
-assert.strictEqual(ancientWarden.drops.find((drop) => drop.id === 'rubble_imp').rate, 0.0025, 'Rubble Imp should drop from every monster at 0.0025');
+assert.strictEqual(ruinGuard.drops.find((drop) => drop.id === 'rubble_imp').rate, 0.0025, 'Rubble Imp should be 0.0025 from Ruin Guards');
+assert.strictEqual(stoneBeast.drops.find((drop) => drop.id === 'rubble_imp').rate, 0.0025, 'Rubble Imp should be 0.0025 from Stone Beasts');
 assert.strictEqual(ancientWarden.drops.find((drop) => drop.id === 'warden_echo').rate, 0.005, 'Warden Echo should be 0.005');
-assert(context.ENEMIES.filter((enemy) => enemy.id !== 'ancient_warden').every((enemy) => enemy.drops.find((drop) => drop.id === 'warden_echo').rate === 0), 'Warden Echo should remain exclusive to Ancient Wardens');
+assert(context.ENEMIES.filter((enemy) => enemy.id !== 'ancient_warden').every((enemy) => !enemy.drops.some((drop) => drop.id === 'warden_echo')), 'Warden Echo should remain exclusive to Ancient Wardens');
 
 context.Game.state = context.newState();
 context.Game.objects = [{ id: 'brushwood_node', defId: 'brushwood', active: true }];

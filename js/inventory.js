@@ -57,6 +57,8 @@ function removeItem(index, qty = 1) {
   return true;
 }
 
+function countInventoryItem(id){return Game.state.inventory.filter((stack)=>stack.id===id).reduce((sum,stack)=>sum+stack.qty,0)}
+
 function hasSpaceFor(id) {
   const def = itemDef(id);
   return (def.stack && Game.state.inventory.some((stack) => stack.id === id && stack.qty < CONFIG.STACK)) || invUsed() < Game.state.invCap;
