@@ -18,7 +18,7 @@ function renderLiveUI() {
   $('hp').textContent = `Health ${state.player.hp}/${maxHp()}`;
   $('coins').textContent = `Coins ${state.coins}`;
   $('fame').textContent = `Fame ${state.fame}`;
-  $('action').textContent = `Action: ${state.action.type}${state.action.target ? '' : ''}`;const fm=$('fishingModeBtn');if(fm&&typeof fishingModeButtonLabel==='function')fm.textContent=fishingModeButtonLabel();
+  $('action').textContent = `Action: ${state.action.type}${state.action.target ? '' : ''}`;const fm=$('gatheringModesBtn');if(fm&&typeof fishingModeButtonLabel==='function')fm.textContent=fishingModeButtonLabel();
   $('progress').style.width = `${state.action.progress || 0}%`;
 }
 
@@ -121,7 +121,7 @@ function renderSelectedItemInfo() {
   const description = def.description ? `<div>${def.description}</div>` : '';
   const forgeUse = (def.type === 'material' || def.type === 'rare') ? `<div>${usedAtForge ? 'Used at the Frontier Forge.' : 'Not used at the Frontier Forge.'}</div>` : '';
   let rareInfo='';
-  if(['sunken_relic','pearl_hook'].includes(def.id)&&typeof rareGoodSummary==='function'){const s=rareGoodSummary(def.id),next=s.res.recipe?s.res.recipe.name:'None';rareInfo=`<div>Total owned across inventory and bank: ${s.total.toLocaleString()}</div><div>Merchant Hall sale value: ${s.value.toLocaleString()} coins</div><div>Reserved for next upgrade: ${s.res.qty.toLocaleString()}</div><div>Sellable excess: ${s.excess.toLocaleString()}</div><div>Current Relicbound Tackle tier: ${typeof relicboundTackleTier==='function'?relicboundTackleTier():0}</div><div>Next recipe that uses this item: ${next}</div>`}
+  if(typeof rareGoodDefinition==='function'&&rareGoodDefinition(def.id)&&typeof rareGoodSummary==='function'){const s=rareGoodSummary(def.id),next=s.res.recipe?s.res.recipe.name:'None',fam=s.def.reservationGroup,tier=typeof gatheringUpgradeTier==='function'?gatheringUpgradeTier(fam):0;rareInfo=`<div>Total owned across inventory and bank: ${s.total.toLocaleString()}</div><div>Merchant Hall sale value: ${s.value.toLocaleString()} coins</div><div>Reserved for next upgrade: ${s.res.qty.toLocaleString()}</div><div>Sellable excess: ${s.excess.toLocaleString()}</div><div>Current upgrade-family tier: ${tier}</div><div>Next recipe that uses this item: ${next}</div>`}
   info.innerHTML = `<b>${def.name}</b><br>Type: ${def.type}${def.heal ? ` · Heals ${def.heal}` : ''}<br>Owned: ${(typeof ownedQuantity === 'function' ? ownedQuantity(def.id) : stack.qty).toLocaleString()}${description}${forgeUse}${rareInfo}<br>${actions.join(' ')}`;
 }
 
