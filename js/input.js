@@ -47,7 +47,7 @@ function setupInput() {
   $('achBtn').onclick = openAch;
   $('logBtn').onclick = openCollection;
   $('bestiaryBtn').onclick = openBestiary;
-  $('fishingModeBtn').onclick = openFishingMode;
+  $('gatheringModesBtn').onclick = openGatheringModes;
   $('settingsBtn').onclick = openSettings;
   $('saveBtn').onclick = saveGame;
 }

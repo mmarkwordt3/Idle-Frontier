@@ -87,7 +87,7 @@ function updateAction(now) {
   }
 
   const tool = itemDef(Game.state.equipment[resource.skill]);
-  const interval = resource.interval * (1 - (tool.tier - 1) * 0.11) * (typeof fishingIntervalMultiplier==='function'?fishingIntervalMultiplier(resource):1);
+  const interval = resource.interval * (1 - (tool.tier - 1) * 0.11) * (typeof gatheringIntervalMultiplier==='function'?gatheringIntervalMultiplier(resource):1);
   const loops = Math.min(30, Math.floor((now - action.last) / interval));
   action.progress = ((now - action.last) % interval) / interval * 100;
   if (loops <= 0) return;
@@ -102,17 +102,18 @@ function updateAction(now) {
     action.last += interval;
     const success = Math.random() < (0.78 + tool.tier * 0.035);
     if (success) {
-      const quantity = Math.random() < tool.tier * 0.03 ? 2 : 1;
+      let quantity = Math.random() < tool.tier * 0.03 ? 2 : 1;
+      if(typeof gatheringBonusQuantity==='function')quantity += gatheringBonusQuantity(resource);
       addItem(resource.item, quantity);
       gainXp(resource.skill, resource.xp);
       Game.state.counts.gathered += quantity;
       logMsg(`Received ${quantity} ${resource.name} (+${resource.xp} xp).`);
-      rollRare(typeof fishingRareTable==='function'?fishingRareTable(resource):resource.rare);
+      rollRare(typeof gatheringRareTable==='function'?gatheringRareTable(resource):resource.rare);
       rollSkillPet(resource);
       sound('gather');
     }
 
-    if (Math.random() < resource.deplete) {
+    if (Math.random() < (typeof gatheringDepletionChance==='function'?gatheringDepletionChance(resource):resource.deplete)) {
       object.active = false;
       object.respawnAt = Date.now() + resource.respawn;
       Game.state.resources[object.id] = object.respawnAt;

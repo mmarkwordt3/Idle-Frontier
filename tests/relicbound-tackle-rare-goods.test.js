@@ -1,7 +1,7 @@
 const assert=require('assert'),fs=require('fs'),vm=require('vm');
 const context={console,performance:{now:()=>1000},Math:Object.create(Math),window:{},document:{getElementById:()=>({innerHTML:'',classList:{remove(){},add(){}},textContent:'',style:{}})},localStorage:{getItem:()=>null,setItem(){},removeItem(){}},confirm:()=>true,location:{reload(){}},modal(){},sound(){},discover(){}};
 context.window=context;context.Math.random=Math.random;vm.createContext(context);
-['js/config.js','js/data.js','js/state.js','js/collection-log.js','js/inventory.js','js/forge.js','js/shop.js','js/fishing.js','js/actions.js','js/save.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),context,{filename:f}));
+['js/config.js','js/data.js','js/state.js','js/collection-log.js','js/inventory.js','js/forge.js','js/shop.js','js/gathering-modes.js','js/actions.js','js/save.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),context,{filename:f}));
 const G=vm.runInContext('Game',context),RESOURCES=vm.runInContext('RESOURCES',context);
 function reset(){G.state=context.newState();G.objects=[];G.shopMessage=null;G.forgeMessage=null;context.normalizeFishingState();}
 function add(id,n,bank=false){if(bank)G.state.bank[id]=(G.state.bank[id]||0)+n;else for(let i=0;i<n;i++)G.state.inventory.push({id,qty:1});}
