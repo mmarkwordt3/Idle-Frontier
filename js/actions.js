@@ -68,6 +68,7 @@ function awardPet(id) {
   discover(id);
   logMsg(`Pet found: ${itemDef(id).name}!`, 'rare');
   sound('rare');
+  if (typeof snapshotCompletedTaskRewards === 'function') snapshotCompletedTaskRewards();
 }
 
 function rollSkillPet(resource) {
@@ -110,6 +111,8 @@ function updateAction(now) {
       logMsg(`Received ${quantity} ${resource.name} (+${resource.xp} xp).`);
       rollRare(typeof gatheringRareTable==='function'?gatheringRareTable(resource):resource.rare);
       rollSkillPet(resource);
+      if (typeof recordGatheringModeAction === 'function') recordGatheringModeAction(resource.skill);
+      if (typeof snapshotCompletedTaskRewards === 'function') snapshotCompletedTaskRewards();
       sound('gather');
     }
 

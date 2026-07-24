@@ -34,6 +34,8 @@ function init() {
   Game.map = makeMap();
   spawnObjects();
   loadGame();
+  if (typeof normalizeTaskProgress === 'function') normalizeTaskProgress(true);
+  if (typeof snapshotCompletedTaskRewards === 'function') snapshotCompletedTaskRewards();
   for (const id of Game.state.ownedTools) {
     discover(id);
   }

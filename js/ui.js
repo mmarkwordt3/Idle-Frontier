@@ -125,12 +125,25 @@ function renderSelectedItemInfo() {
   info.innerHTML = `<b>${def.name}</b><br>Type: ${def.type}${def.heal ? ` · Heals ${def.heal}` : ''}<br>Owned: ${(typeof ownedQuantity === 'function' ? ownedQuantity(def.id) : stack.qty).toLocaleString()}${description}${forgeUse}${rareInfo}<br>${actions.join(' ')}`;
 }
 
+function taskCard(task, cls, locked) {
+  const progress = taskProgress(task);
+  const pct = Math.max(0, Math.min(100, (progress / task.target) * 100));
+  const ready = taskIsClaimable(task);
+  const requirement = locked ? `<div class="task-requirement">Requires: ${prerequisiteText(task)}</div>` : `<div class="task-requirement">Progress: ${taskRequirementText(task)}</div><div class="task-progress"><div class="task-progress-fill" style="width:${pct}%"></div></div>`;
+  const action = ready ? `<button onclick="claimTask('${task.id}')">Claim</button><span class="good"> Ready to claim</span>` : '';
+  return `<div class="task-card ${cls}"><h3>${locked ? '' : ready ? '★ ' : ''}${task.name}</h3><p>${task.description}</p>${requirement}<div class="task-reward">Reward: ${taskRewardText(task)}</div><div class="task-xp-reward">${taskXpRewardText(task, cls === 'claimed' ? 'XP awarded' : 'XP reward')}</div>${action}</div>`;
+}
+
 function openTasks() {
-  modal('Task Board', TASKS.map((task) => {
-    const progress = taskProgress(task);
-    const claimed = Game.state.tasks[task[0]]?.claimed;
-    return `<div class="entry ${progress >= task[2] ? 'complete' : ''}">${task[1]} (${Math.min(progress, task[2])}/${task[2]}) ${claimed ? 'Claimed' : progress >= task[2] ? `<button onclick="claimTask('${task[0]}')">Claim</button>` : ''}</div>`;
-  }).join(''));
+  if (typeof snapshotCompletedTaskRewards === 'function') snapshotCompletedTaskRewards();
+  const claimedCount = TASKS.filter(taskIsClaimed).length;
+  const available = TASKS.filter((task) => !taskIsClaimed(task) && taskIsUnlocked(task)).sort((a, b) => Number(taskIsClaimable(b)) - Number(taskIsClaimable(a)) || a.order - b.order);
+  const locked = TASKS.filter((task) => !taskIsClaimed(task) && !taskIsUnlocked(task)).sort((a, b) => a.order - b.order);
+  const claimed = TASKS.filter(taskIsClaimed).sort((a, b) => a.order - b.order);
+  const availableHtml = available.length ? available.map((task) => taskCard(task, taskIsClaimable(task) ? 'claimable' : 'incomplete', false)).join('') : '<div class="task-empty">No available tasks right now.</div>';
+  const lockedHtml = locked.length ? locked.map((task) => taskCard(task, 'locked', true)).join('') : '<div class="task-empty">No locked tasks remain.</div>';
+  const claimedHtml = claimed.length ? claimed.map((task) => taskCard(task, 'claimed', false).replace('<h3>', '<h3>✓ ')).join('') : '<div class="task-empty">No claimed tasks yet.</div>';
+  modal('Task Board', `<div class="task-summary">Tasks claimed: ${claimedCount.toLocaleString()} / ${TASKS.length.toLocaleString()}</div><section class="task-section"><h3 class="task-section-heading">Available</h3>${availableHtml}</section><details class="task-section"><summary class="task-section-heading">Locked</summary>${lockedHtml}</details><details class="task-section"><summary class="task-section-heading">Claimed</summary>${claimedHtml}</details>`);
 }
 
 function openAch() {
