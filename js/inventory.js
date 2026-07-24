@@ -57,7 +57,11 @@ function removeItem(index, qty = 1) {
   return true;
 }
 
-function countInventoryItem(id){return Game.state.inventory.filter((stack)=>stack.id===id).reduce((sum,stack)=>sum+stack.qty,0)}
+function inventoryItemQuantity(id){return Game.state.inventory.filter((stack)=>stack.id===id).reduce((sum,stack)=>sum+stack.qty,0)}
+function bankItemQuantity(id){return Game.state.bank[id]||0}
+function ownedItemQuantity(id){return inventoryItemQuantity(id)+bankItemQuantity(id)}
+function countInventoryItem(id){return inventoryItemQuantity(id)}
+function removeOwnedItemQuantity(id,qty){let left=qty;for(let i=Game.state.inventory.length-1;i>=0&&left>0;i--){const s=Game.state.inventory[i];if(s.id!==id)continue;const take=Math.min(left,s.qty);s.qty-=take;left-=take;if(s.qty<=0)Game.state.inventory.splice(i,1)}if(left>0){const take=Math.min(left,Game.state.bank[id]||0);Game.state.bank[id]-=take;left-=take;if(Game.state.bank[id]<=0)delete Game.state.bank[id]}Game.uiDirty=true;return left===0}
 
 function hasSpaceFor(id) {
   const def = itemDef(id);

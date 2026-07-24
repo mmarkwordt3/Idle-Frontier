@@ -1,3 +1,14 @@
+
+const RARE_GOODS=[{id:'sunken_relic',sellPrice:50,reservationGroup:'relicbound_tackle'},{id:'pearl_hook',sellPrice:500,reservationGroup:'relicbound_tackle'}];
+function nextRelicboundRecipe(){if(typeof normalizeFishingState==='function')normalizeFishingState();if(typeof forgeRecipe!=='function')return null;if(!Game.state.upgrades.relicbound_tackle_1)return forgeRecipe('relicbound_tackle_1');if(!Game.state.upgrades.relicbound_tackle_2)return forgeRecipe('relicbound_tackle_2');if(!Game.state.upgrades.relicbound_tackle_3)return forgeRecipe('relicbound_tackle_3');return null}
+function rareGoodDefinition(id){return RARE_GOODS.find(g=>g.id===id)}
+function rareGoodReservation(id){const r=nextRelicboundRecipe();return {qty:r?(r.materials[id]||0):0,recipe:r}}
+function rareGoodSummary(id){const def=rareGoodDefinition(id),res=rareGoodReservation(id),total=ownedItemQuantity(id);return {def,res,total,inv:inventoryItemQuantity(id),bank:bankItemQuantity(id),excess:Math.max(0,total-res.qty),value:def.sellPrice}}
+function renderRareGoods(){return `<h2>Rare Goods</h2><div class="rare-note">Rare Goods sales remove inventory copies first, then banked copies.</div>${RARE_GOODS.map(g=>{const s=rareGoodSummary(g.id),name=itemDef(g.id).name,res=s.res.recipe?`Reserved for ${s.res.recipe.name}: ${s.res.qty.toLocaleString()}`:'Reserved: 0',all=s.res.recipe?'':'<div class="rare-note">All duplicates are sellable</div>';return `<div class="entry rare-good-card"><h3>${name}</h3><div>Inventory: ${s.inv.toLocaleString()}</div><div>Bank: ${s.bank.toLocaleString()}</div><div>Total owned: ${s.total.toLocaleString()}</div><div class="reserved">${res}</div>${all}<div class="sellable">Sellable excess: ${s.excess.toLocaleString()}</div><div class="sale-value">Value: ${s.value.toLocaleString()} coins each</div><div>Total excess value: ${(s.excess*s.value).toLocaleString()} coins</div><button onclick="sellRareGood('${g.id}',1)">Sell 1</button> <button onclick="sellRareGoodExcess('${g.id}')" ${s.excess>0?'':'disabled'}>Sell all excess</button> <input class="rare-qty" id="sell-${g.id}" type="number" min="1" step="1"> <button onclick="sellRareGood('${g.id}',document.getElementById('sell-${g.id}').value)">Sell quantity</button></div>`}).join('')}`}
+function validateRareSale(id,qty){qty=Number(qty);if(!Number.isInteger(qty)||qty<=0)return {ok:false,reason:'Enter a whole quantity greater than zero.'};const s=rareGoodSummary(id);if(!s.def)return {ok:false,reason:'Rare good unavailable.'};if(qty>s.total)return {ok:false,reason:`You only own ${s.total.toLocaleString()} ${itemDef(id).name}.`};return {ok:true,qty,summary:s}}
+function completeRareSale(id,qty){const s=rareGoodSummary(id);if(!removeOwnedItemQuantity(id,qty))return shopFeedback('Sale failed; items were not removed.','bad');addItem('coins',qty*s.value);shopFeedback(`Sold ${qty.toLocaleString()} ${itemDef(id).name} for ${(qty*s.value).toLocaleString()} coins.`)}
+function sellRareGoodExcess(id){const s=rareGoodSummary(id);if(s.excess<=0)return shopFeedback('No sellable excess available.','bad');completeRareSale(id,s.excess)}
+function sellRareGood(id,qty){const v=validateRareSale(id,qty);if(!v.ok)return shopFeedback(v.reason,'bad');if(v.qty>v.summary.excess){const r=v.summary.res.recipe,one=v.qty===1;const msg=one?`Selling this ${itemDef(id).name} will leave you without enough materials for ${r?r.name:'the next upgrade'}. Continue?`:`This sale will use items reserved for ${r?r.name:'the next upgrade'}. Continue?`;if(!confirm(msg))return}completeRareSale(id,v.qty)}
 function shopEntryName(entry) {
   return entry.name || itemDef(entry.id).name;
 }
@@ -99,7 +110,7 @@ function renderShopEntries() {
 function openShop(message) {
   if (message !== undefined) Game.shopMessage = message;
   const feedback = Game.shopMessage ? `<div id="shopFeedback" class="msg ${Game.shopMessage.cls || ''}">${Game.shopMessage.text}</div>` : '<div id="shopFeedback" class="msg"></div>';
-  modal('Merchant Hall', `<div class="shop-summary"><b>Coins:</b> ${formatCoins(Game.state.coins)}</div>${feedback}<button onclick="sellAll()">Sell resources and ordinary drops</button><div>${renderShopEntries()}</div>`);
+  modal('Merchant Hall', `<div class="shop-summary"><b>Coins:</b> ${formatCoins(Game.state.coins)}</div>${feedback}<button onclick="sellAll()">Sell resources and ordinary drops</button>${renderRareGoods()}<div>${renderShopEntries()}</div>`);
 }
 
 function shopFeedback(text, cls) {
