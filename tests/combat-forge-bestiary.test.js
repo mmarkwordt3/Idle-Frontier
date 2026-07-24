@@ -1,7 +1,7 @@
 const assert=require('assert'),fs=require('fs'),vm=require('vm');
 class El{constructor(){this.style={};this.classList={add(){},remove(){},toggle(){}};this.innerHTML='';this.textContent='';}}
 const elements={};const context={console,Date,Math,performance:{now:()=>1000},document:{getElementById:id=>elements[id]||(elements[id]=new El())},confirm:()=>true,localStorage:{getItem(){return null},setItem(){}}};context.window=context;vm.createContext(context);
-['js/config.js','js/data.js','js/state.js','js/collection-log.js','js/inventory.js','js/forge.js','js/ui.js','js/shop.js','js/save.js','js/combat.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),context,{filename:f}));
+['js/config.js','js/data.js','js/state.js','js/pity.js','js/collection-log.js','js/inventory.js','js/forge.js','js/ui.js','js/shop.js','js/save.js','js/combat.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),context,{filename:f}));
 context.sound=()=>{};context.cancel=()=>{};const Game=vm.runInContext('Game',context),ENEMIES=vm.runInContext('ENEMIES',context),FORGE_RECIPES=vm.runInContext('FORGE_RECIPES',context),ITEM=vm.runInContext('ITEM',context);
 const drops=id=>ENEMIES.find(e=>e.id===id).drops;const drop=(e,id)=>drops(e).find(d=>d.id===id);const no=(e,id)=>assert(!drop(e,id),`${e} must not drop ${id}`);const rate=(e,id,r)=>assert.strictEqual(drop(e,id).rate,r,`${e} ${id}`);
 ['cave_rat','moss_creature','ruin_guard','stone_beast','ancient_warden'].forEach(e=>no(e,'ancient_brand'));

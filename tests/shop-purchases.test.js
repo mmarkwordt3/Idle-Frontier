@@ -26,7 +26,7 @@ function createContext() {
   };
   context.window = context;
   vm.createContext(context);
-  for (const file of ['js/config.js', 'js/data.js', 'js/state.js', 'js/collection-log.js', 'js/inventory.js', 'js/ui.js', 'js/shop.js']) {
+  for (const file of ['js/config.js', 'js/data.js', 'js/state.js', 'js/pity.js','js/collection-log.js', 'js/inventory.js', 'js/ui.js', 'js/shop.js']) {
     vm.runInContext(fs.readFileSync(file, 'utf8'), context, { filename: file });
   }
   context.Game = vm.runInContext('Game', context);

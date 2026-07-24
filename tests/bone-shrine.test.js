@@ -7,7 +7,7 @@ function ctx(){
   const elements={};
   const c={console,Date,Math:Object.create(Math),performance:{now:()=>1000},document:{getElementById:id=>elements[id]||(elements[id]=new El()),addEventListener(){}},confirm:()=>true,localStorage:{getItem(){return null},setItem(){}},requestAnimationFrame(){},setInterval(){}};
   c.Math.NaN=NaN;c.Math.Infinity=Infinity;c.window=c;vm.createContext(c);
-  ['js/config.js','js/data.js','js/state.js','js/inventory.js','js/map.js','js/pathfinding.js','js/player.js','js/tasks.js','js/achievements.js','js/collection-log.js','js/bank.js','js/shop.js','js/forge.js','js/shrine.js','js/combat.js','js/gathering-modes.js','js/actions.js','js/renderer.js','js/save.js','js/ui.js','js/input.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f}));
+  ['js/config.js','js/data.js','js/state.js','js/inventory.js','js/map.js','js/pathfinding.js','js/player.js','js/tasks.js','js/achievements.js','js/pity.js','js/collection-log.js','js/bank.js','js/shop.js','js/forge.js','js/shrine.js','js/combat.js','js/gathering-modes.js','js/actions.js','js/renderer.js','js/save.js','js/ui.js','js/input.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f}));
   c.sound=()=>{};c.modal=(t,b)=>{(elements.modalTitle||(elements.modalTitle=new El())).textContent=t;(elements.modalBody||(elements.modalBody=new El())).innerHTML=b};
   return {c,elements,G:vm.runInContext('Game',c)};
 }

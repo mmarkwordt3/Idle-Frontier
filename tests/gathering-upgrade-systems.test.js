@@ -1,6 +1,6 @@
 const assert=require('assert'),fs=require('fs'),vm=require('vm');
 const context={console,performance:{now:()=>0},localStorage:{getItem:()=>null,setItem:()=>{}},document:{},confirm:()=>true};context.global=context;context.window=context;vm.createContext(context);
-['js/config.js','js/data.js','js/state.js','js/collection-log.js','js/inventory.js','js/forge.js','js/shop.js','js/gathering-modes.js','js/actions.js','js/save.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),context,{filename:f}));
+['js/config.js','js/data.js','js/state.js','js/pity.js','js/collection-log.js','js/inventory.js','js/forge.js','js/shop.js','js/gathering-modes.js','js/actions.js','js/save.js'].forEach(f=>vm.runInContext(fs.readFileSync(f,'utf8'),context,{filename:f}));
 const G=vm.runInContext('Game',context),RES=vm.runInContext('RESOURCES',context),REC=vm.runInContext('FORGE_RECIPES',context);
 context.modal=()=>{};context.openShop=()=>{};context.openForge=()=>{};context.sound=()=>{};context.setAction=a=>{G.state.action=a};
 function reset(){G.state=context.newState();G.objects=[];context.normalizeGatheringModes()}
