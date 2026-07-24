@@ -43,6 +43,19 @@ function init() {
   requestAnimationFrame(loop);
 }
 
+function updatePassiveRegen(now) {
+  normalizeForgeUpgrades();
+  if (Game.state.action.type === 'fighting') { Game.state.regen.last = now; return; }
+  if (Game.state.player.hp >= maxHp()) { Game.state.regen.last = now; return; }
+  const interval = getRegenInterval();
+  if (now - Game.state.regen.last >= interval && now - Game.state.regen.last < CONFIG.ACTION_CATCHUP_MS) {
+    Game.state.player.hp = Math.min(maxHp(), Game.state.player.hp + 1);
+    Game.state.regen.last = now;
+  } else if (now - Game.state.regen.last >= CONFIG.ACTION_CATCHUP_MS) {
+    Game.state.regen.last = now;
+  }
+}
+
 function loop(now) {
   try {
     const dt = Math.min(now - Game.last, CONFIG.ACTION_CATCHUP_MS);
@@ -51,9 +64,7 @@ function loop(now) {
     updateRespawns();
     updateAction(now);
     updateCombat(now);
-    if (Game.state.action.type !== 'fighting' && Game.state.player.hp < maxHp() && now % 3000 < 20) {
-      Game.state.player.hp += 1;
-    }
+    updatePassiveRegen(now);
     updateAchievements();
     draw();
     renderLiveUI();

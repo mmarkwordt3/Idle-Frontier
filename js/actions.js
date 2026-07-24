@@ -35,6 +35,7 @@ function interact(object) {
       Game.state.player.hp = maxHp();
       logMsg('The fountain restores you.');
     } else if (object.id === 'tasks') openTasks();
+    else if (object.id === 'forge') openForge();
     else openShop('fame');
     return;
   }

@@ -46,6 +46,7 @@ function setupInput() {
   $('tasksBtn').onclick = openTasks;
   $('achBtn').onclick = openAch;
   $('logBtn').onclick = openCollection;
+  $('bestiaryBtn').onclick = openBestiary;
   $('settingsBtn').onclick = openSettings;
   $('saveBtn').onclick = saveGame;
 }
@@ -93,7 +94,7 @@ function getHoverInfo(hit) {
   }
   if (hit.type === 'enemy') {
     const enemy = enemyDef(hit.target.defId);
-    return { title: enemy.name, locked: false, lines: [`Health ${hit.target.hp}/${enemy.hp}`, 'Click to fight'] };
+    return { title: enemy.name, locked: false, lines: [`Health ${hit.target.hp}/${enemy.hp}`, `Max hit ${enemy.max}`, `Combat XP ${enemy.xp}`, `Kill count ${Game.state.kills[enemy.id] || 0}`, 'Click to fight'] };
   }
   if (hit.type === 'building') {
     return { title: hit.target.name, locked: false, lines: ['Click to interact'] };

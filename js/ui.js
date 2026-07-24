@@ -62,7 +62,7 @@ function renderEquipment() {
   const state = Game.state;
   $('equipment').innerHTML = Object.keys(state.equipment)
     .map((slot) => `<div>${slot}: ${state.equipment[slot] ? itemDef(state.equipment[slot]).name : 'None'}</div>`)
-    .join('') + `<div>Pet: ${state.pets.active ? itemDef(state.pets.active).name : 'None'}</div>`;
+    .join('') + `<div>Pet: ${state.pets.active ? itemDef(state.pets.active).name : 'None'}</div><div>Forge accuracy bonus: +${typeof sentinelAccuracyBonus === 'function' ? sentinelAccuracyBonus() : 0}</div>`;
 }
 
 function renderActionLog() {
@@ -117,7 +117,10 @@ function renderSelectedItemInfo() {
   if (def.slot) actions.push(`<button onclick="equipIndex(${index})">Equip</button>`);
   if (def.heal) actions.push(`<button onclick="consumeIndex(${index})">Use</button>`);
   actions.push(`<button onclick="dropIndex(${index})">Drop</button>`);
-  info.innerHTML = `<b>${def.name}</b><br>${def.type}${def.heal ? ` · Heals ${def.heal}` : ''}<br>${actions.join(' ')}`;
+  const usedAtForge = typeof FORGE_RECIPES !== 'undefined' && FORGE_RECIPES.some((recipe) => recipe.materials[def.id]);
+  const description = def.description ? `<div>${def.description}</div>` : '';
+  const forgeUse = (def.type === 'material' || def.type === 'rare') ? `<div>${usedAtForge ? 'Used at the Frontier Forge.' : 'Not used at the Frontier Forge.'}</div>` : '';
+  info.innerHTML = `<b>${def.name}</b><br>Type: ${def.type}${def.heal ? ` · Heals ${def.heal}` : ''}<br>Owned: ${(typeof ownedQuantity === 'function' ? ownedQuantity(def.id) : stack.qty).toLocaleString()}${description}${forgeUse}<br>${actions.join(' ')}`;
 }
 
 function openTasks() {
