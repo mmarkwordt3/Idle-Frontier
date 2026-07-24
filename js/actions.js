@@ -87,7 +87,7 @@ function updateAction(now) {
   }
 
   const tool = itemDef(Game.state.equipment[resource.skill]);
-  const interval = resource.interval * (1 - (tool.tier - 1) * 0.11);
+  const interval = resource.interval * (1 - (tool.tier - 1) * 0.11) * (typeof fishingIntervalMultiplier==='function'?fishingIntervalMultiplier(resource):1);
   const loops = Math.min(30, Math.floor((now - action.last) / interval));
   action.progress = ((now - action.last) % interval) / interval * 100;
   if (loops <= 0) return;
@@ -107,7 +107,7 @@ function updateAction(now) {
       gainXp(resource.skill, resource.xp);
       Game.state.counts.gathered += quantity;
       logMsg(`Received ${quantity} ${resource.name} (+${resource.xp} xp).`);
-      rollRare(resource.rare);
+      rollRare(typeof fishingRareTable==='function'?fishingRareTable(resource):resource.rare);
       rollSkillPet(resource);
       sound('gather');
     }
@@ -127,11 +127,9 @@ function rollRare(table) {
   for (const drop of table || []) {
     if (drop.rate && Math.random() < drop.rate) {
       if (itemDef(drop.id).type === 'pet') awardPet(drop.id);
-      else {
-        addItem(drop.id, 1);
-        discover(drop.id);
+      else if(addItem(drop.id, 1)){
         sound('rare');
-      }
+      } else logMsg(`${itemDef(drop.id).name} was lost because your inventory was full.`, 'bad');
     }
   }
 }
