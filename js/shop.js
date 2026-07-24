@@ -5,7 +5,7 @@ function rareGoodReservation(id){const g=rareGoodDefinition(id),r=g&&typeof next
 function rareGoodSummary(id){const def=rareGoodDefinition(id),res=rareGoodReservation(id),total=ownedItemQuantity(id);return {def,res,total,inv:inventoryItemQuantity(id),bank:bankItemQuantity(id),excess:Math.max(0,total-res.qty),value:def.sellPrice}}
 function renderRareGoods(){const groups=['woodcutting','mining','fishing'];return `<h2>Rare Goods</h2><div class="rare-note">Rare Goods sales remove inventory copies first, then banked copies.</div>${groups.map(skill=>`<div class="rare-good-group"><h3>${formatSkill(skill)}</h3>${RARE_GOODS.filter(g=>g.skill===skill).map(g=>{const s=rareGoodSummary(g.id),name=itemDef(g.id).name,res=s.res.recipe?`Reserved for ${s.res.recipe.name}: ${s.res.qty.toLocaleString()}`:'Reserved: 0',all=s.res.recipe?'':'<div class="rare-note">All duplicates are sellable</div>';return `<div class="entry rare-good-card"><h4>${name}</h4><div>Inventory: ${s.inv.toLocaleString()}</div><div>Bank: ${s.bank.toLocaleString()}</div><div>Total owned: ${s.total.toLocaleString()}</div><div class="reserved">${res}</div>${all}<div class="sellable">Sellable excess: ${s.excess.toLocaleString()}</div><div class="sale-value">Value: ${s.value.toLocaleString()} coins each</div><div>Total excess value: ${(s.excess*s.value).toLocaleString()} coins</div><button onclick="sellRareGood('${g.id}',1)">Sell 1</button> <button onclick="sellRareGoodExcess('${g.id}')" ${s.excess>0?'':'disabled'}>Sell all excess</button> <input class="rare-qty" id="sell-${g.id}" type="number" min="1" step="1"> <button onclick="sellRareGood('${g.id}',document.getElementById('sell-${g.id}').value)">Sell quantity</button></div>`}).join('')}</div>`).join('')}`}
 function validateRareSale(id,qty){qty=Number(qty);if(!Number.isInteger(qty)||qty<=0)return {ok:false,reason:'Enter a whole quantity greater than zero.'};const s=rareGoodSummary(id);if(!s.def)return {ok:false,reason:'Rare good unavailable.'};if(qty>s.total)return {ok:false,reason:`You only own ${s.total.toLocaleString()} ${itemDef(id).name}.`};return {ok:true,qty,summary:s}}
-function completeRareSale(id,qty){const s=rareGoodSummary(id);if(!removeOwnedItemQuantity(id,qty))return shopFeedback('Sale failed; items were not removed.','bad');addItem('coins',qty*s.value);shopFeedback(`Sold ${qty.toLocaleString()} ${itemDef(id).name} for ${(qty*s.value).toLocaleString()} coins.`)}
+function completeRareSale(id,qty){qty=Number(qty);if(!Number.isInteger(qty)||qty<=0)return shopFeedback('Enter a whole quantity greater than zero.','bad');const s=rareGoodSummary(id);if(!s.def)return shopFeedback('Rare good unavailable.','bad');if(!removeOwnedItemQuantity(id,qty))return shopFeedback('Sale failed; items were not removed.','bad');addItem('coins',qty*s.value);Game.state.counts.rareGoodsSold=(Game.state.counts.rareGoodsSold||0)+qty;if(typeof snapshotCompletedTaskRewards==='function')snapshotCompletedTaskRewards();shopFeedback(`Sold ${qty.toLocaleString()} ${itemDef(id).name} for ${(qty*s.value).toLocaleString()} coins.`)}
 function sellRareGoodExcess(id){const s=rareGoodSummary(id);if(s.excess<=0)return shopFeedback('No sellable excess available.','bad');completeRareSale(id,s.excess)}
 function sellRareGood(id,qty){const v=validateRareSale(id,qty);if(!v.ok)return shopFeedback(v.reason,'bad');if(v.qty>v.summary.excess){const r=v.summary.res.recipe,one=v.qty===1;const msg=one?`Selling this ${itemDef(id).name} will leave you without enough materials for ${r?r.name:'the next upgrade'}. Continue?`:`This sale will use items reserved for ${r?r.name:'the next upgrade'}. Continue?`;if(!confirm(msg))return}completeRareSale(id,v.qty)}
 function shopEntryName(entry) {
@@ -132,6 +132,7 @@ function buy(id) {
     if (!applied) return shopFeedback('Your inventory is full.', 'bad');
     if (def.type === 'tool' && !Game.state.ownedTools.includes(entry.id)) Game.state.ownedTools.push(entry.id);
     discover(entry.id);
+    if (typeof snapshotCompletedTaskRewards === 'function') snapshotCompletedTaskRewards();
   } else if (entry.type === 'upgrade') {
     if (Game.state.upgrades[id]) return shopFeedback(`${name} is already purchased.`, 'bad');
     Game.state.upgrades[id] = true;
@@ -140,6 +141,7 @@ function buy(id) {
   } else if (entry.type === 'fame') {
     Game.state.fame += entry.amount;
     Game.state.counts.fameBought += entry.amount;
+    if (typeof snapshotCompletedTaskRewards === 'function') snapshotCompletedTaskRewards();
     applied = true;
   } else {
     if (entry.type === 'cosmetic' && Game.state.upgrades[id]) return shopFeedback(`${name} is already owned.`, 'bad');
