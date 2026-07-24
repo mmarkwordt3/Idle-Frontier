@@ -36,6 +36,7 @@ function interact(object) {
       logMsg('The fountain restores you.');
     } else if (object.id === 'tasks') openTasks();
     else if (object.id === 'forge') openForge();
+    else if (object.id === 'shrine') openMemorialShrine();
     else openShop('fame');
     return;
   }
